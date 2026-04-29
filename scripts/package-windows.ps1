@@ -143,6 +143,14 @@ function Get-AppVersion {
     return "0.0.0"
 }
 
+function Assert-AppVersion {
+    param([string]$Version)
+
+    if (-not [regex]::IsMatch($Version, '^[1-9]\.[0-9]{2}\.[0-9]{2}$')) {
+        throw "版本号必须使用 X.YY.ZZ 三段式，范围为 1.00.00 到 9.99.99，当前值：$Version"
+    }
+}
+
 function Resolve-SafeChildPath {
     param(
         [string]$BasePath,
@@ -159,6 +167,50 @@ function Resolve-SafeChildPath {
         throw "目标路径不在工程目录下：$targetFullPath"
     }
     return $targetFullPath
+}
+
+function Get-CachedSourceDir {
+    param([string]$BuildPath)
+
+    $cachePath = Join-Path $BuildPath "CMakeCache.txt"
+    if (-not (Test-Path -LiteralPath $cachePath)) {
+        return ""
+    }
+
+    $cacheText = Get-Content -Encoding UTF8 -LiteralPath $cachePath -Raw
+    $match = [regex]::Match($cacheText, '(?m)^CMAKE_HOME_DIRECTORY:INTERNAL=(.+)$')
+    if (-not $match.Success) {
+        return ""
+    }
+
+    return [System.IO.Path]::GetFullPath($match.Groups[1].Value.Trim())
+}
+
+function Clear-StaleBuildDirectory {
+    param(
+        [string]$BuildPath,
+        [string]$ExpectedSourceDir
+    )
+
+    $cachedSourceDir = Get-CachedSourceDir -BuildPath $BuildPath
+    if ([string]::IsNullOrWhiteSpace($cachedSourceDir)) {
+        return
+    }
+
+    $expectedFullPath = [System.IO.Path]::GetFullPath($ExpectedSourceDir)
+    if ($cachedSourceDir.Equals($expectedFullPath, [System.StringComparison]::OrdinalIgnoreCase)) {
+        return
+    }
+
+    $repoFullPath = [System.IO.Path]::GetFullPath($repoRoot)
+    if (-not $BuildPath.StartsWith($repoFullPath, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "拒绝清理仓库外构建目录：$BuildPath"
+    }
+
+    Write-Warning "构建目录缓存来自其他源码目录，将自动清理：$BuildPath"
+    Write-Warning "缓存源码目录：$cachedSourceDir"
+    Write-Warning "当前源码目录：$expectedFullPath"
+    Remove-Item -LiteralPath $BuildPath -Recurse -Force
 }
 
 function Find-BuiltExecutable {
@@ -183,6 +235,51 @@ function Find-BuiltExecutable {
     }
 
     throw "构建目录中找不到 xray_serial_console.exe：$BuildPath"
+}
+
+function Assert-BuiltExecutableVersion {
+    param(
+        [string]$ExePath,
+        [string]$Version
+    )
+
+    $bytes = [System.IO.File]::ReadAllBytes($ExePath)
+    $asciiVersion = [System.Text.Encoding]::ASCII.GetBytes($Version)
+    $unicodeVersion = [System.Text.Encoding]::Unicode.GetBytes($Version)
+
+    function Test-ContainsBytes {
+        param(
+            [byte[]]$Haystack,
+            [byte[]]$Needle
+        )
+
+        if ($Needle.Length -eq 0 -or $Haystack.Length -lt $Needle.Length) {
+            return $false
+        }
+
+        for ($i = 0; $i -le $Haystack.Length - $Needle.Length; $i++) {
+            $matched = $true
+            for ($j = 0; $j -lt $Needle.Length; $j++) {
+                if ($Haystack[$i + $j] -ne $Needle[$j]) {
+                    $matched = $false
+                    break
+                }
+            }
+            if ($matched) {
+                return $true
+            }
+        }
+
+        return $false
+    }
+
+    $containsAsciiVersion = Test-ContainsBytes -Haystack $bytes -Needle $asciiVersion
+    $containsUnicodeVersion = Test-ContainsBytes -Haystack $bytes -Needle $unicodeVersion
+    if ($containsAsciiVersion -or $containsUnicodeVersion) {
+        return
+    }
+
+    throw "构建产物版本与当前版本不一致：$ExePath 中未找到版本号 $Version。请清理构建目录后重新构建。"
 }
 
 function Write-InnoSetupScript {
@@ -269,6 +366,7 @@ if ([string]::IsNullOrWhiteSpace($BuildDir)) {
 $buildFullPath = Resolve-SafeChildPath -BasePath $repoRoot -ChildPath $BuildDir
 $packageFullPath = Resolve-SafeChildPath -BasePath $repoRoot -ChildPath $PackageDir
 $version = Get-AppVersion
+Assert-AppVersion -Version $version
 $portableName = "xray_serial_console-$version-portable"
 $portablePath = Join-Path $packageFullPath $portableName
 $stagingPath = Join-Path $packageFullPath "$portableName-staging"
@@ -278,14 +376,8 @@ $installerOutputPath = Join-Path $installerWorkPath "output"
 $innoScriptPath = Join-Path $installerWorkPath "xray_serial_console.iss"
 
 if ($Clean) {
-    if (Test-Path -LiteralPath $portablePath) {
-        Remove-Item -LiteralPath $portablePath -Recurse -Force
-    }
     if (Test-Path -LiteralPath $stagingPath) {
         Remove-Item -LiteralPath $stagingPath -Recurse -Force
-    }
-    if (Test-Path -LiteralPath $zipPath) {
-        Remove-Item -LiteralPath $zipPath -Force
     }
     if (Test-Path -LiteralPath $installerWorkPath) {
         Remove-Item -LiteralPath $installerWorkPath -Recurse -Force
@@ -293,29 +385,51 @@ if ($Clean) {
 }
 
 if (-not $SkipBuild) {
-    if (-not (Test-Path -LiteralPath (Join-Path $buildFullPath "CMakeCache.txt"))) {
+    $cxxCompiler = Join-Path $MingwBinPath "g++.exe"
+    $makeProgram = Join-Path $MingwBinPath "mingw32-make.exe"
+    Clear-StaleBuildDirectory -BuildPath $buildFullPath -ExpectedSourceDir $repoRoot
+
+    Invoke-Native -FilePath $cmakeExe `
+        -Arguments @(
+            "-S", $repoRoot,
+            "-B", $buildFullPath,
+            "-G", $Generator,
+            "-DCMAKE_PREFIX_PATH=$QtPrefixPath",
+            "-DCMAKE_BUILD_TYPE=$Configuration",
+            "-DCMAKE_CXX_COMPILER=$cxxCompiler",
+            "-DCMAKE_MAKE_PROGRAM=$makeProgram"
+        ) `
+        -Description "CMake 配置"
+
+    if ($Clean) {
         Invoke-Native -FilePath $cmakeExe `
-            -Arguments @("-S", $repoRoot, "-B", $buildFullPath, "-G", $Generator, "-DCMAKE_PREFIX_PATH=$QtPrefixPath", "-DCMAKE_BUILD_TYPE=$Configuration") `
-            -Description "CMake 配置"
+            -Arguments @("--build", $buildFullPath, "--config", $Configuration, "--target", "clean") `
+            -Description "CMake 清理"
     }
+
     Invoke-Native -FilePath $cmakeExe `
         -Arguments @("--build", $buildFullPath, "--config", $Configuration) `
         -Description "CMake 构建"
 }
 
 $builtExe = Find-BuiltExecutable -BuildPath $buildFullPath
+Assert-BuiltExecutableVersion -ExePath $builtExe -Version $version
+Write-Host "应用版本：$version"
+Write-Host "构建产物：$builtExe"
 
 New-Item -ItemType Directory -Force -Path $packageFullPath | Out-Null
-if (Test-Path -LiteralPath $portablePath) {
-    Remove-Item -LiteralPath $portablePath -Recurse -Force
-}
 if (Test-Path -LiteralPath $stagingPath) {
     Remove-Item -LiteralPath $stagingPath -Recurse -Force
 }
 New-Item -ItemType Directory -Force -Path $stagingPath | Out-Null
 
 Copy-Item -LiteralPath $builtExe -Destination (Join-Path $stagingPath "xray_serial_console.exe") -Force
-Copy-Item -LiteralPath (Join-Path $repoRoot "README.md") -Destination (Join-Path $stagingPath "README.md") -Force
+foreach ($readmeName in @("README.md", "README.zh-CN.md", "README.en-US.md")) {
+    $readmePath = Join-Path $repoRoot $readmeName
+    if (Test-Path -LiteralPath $readmePath) {
+        Copy-Item -LiteralPath $readmePath -Destination (Join-Path $stagingPath $readmeName) -Force
+    }
+}
 
 $deployMode = if ($Configuration -eq "Debug") { "--debug" } else { "--release" }
 try {
@@ -334,6 +448,9 @@ try {
     throw
 }
 
+if (Test-Path -LiteralPath $portablePath) {
+    Remove-Item -LiteralPath $portablePath -Recurse -Force
+}
 Move-Item -LiteralPath $stagingPath -Destination $portablePath
 
 if (Test-Path -LiteralPath $zipPath) {

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(xray_serial_console VERSION 1.00.00 LANGUAGES CXX)
+project(xray_serial_console VERSION 1.00.01 LANGUAGES CXX)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)

@@ -3,7 +3,7 @@
  * All rights reserved.
  *
  * Filename: mainwindow.cpp
- * Version: 1.00.00
+ * Version: 1.00.01
  * Description: X-Ray Serial Console main window implementation
  *
  * Author: mantaXray

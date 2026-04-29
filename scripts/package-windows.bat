@@ -7,6 +7,9 @@ set "PACKAGE_PS1=%SCRIPT_DIR%package-windows.ps1"
 if not exist "%PACKAGE_PS1%" (
     set "PACKAGE_PS1=%SCRIPT_DIR%scripts\package-windows.ps1"
 )
+if not exist "%PACKAGE_PS1%" (
+    set "PACKAGE_PS1=%CD%\scripts\package-windows.ps1"
+)
 
 if not exist "%PACKAGE_PS1%" (
     echo package-windows.ps1 was not found.
