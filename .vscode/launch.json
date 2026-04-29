@@ -1,0 +1,24 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "X-Ray Serial Console (MinGW Debug)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/qt-6.11-mingw-debug/xray_serial_console.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "D:\\QT\\6.11.0\\mingw_64\\bin;D:\\QT\\Tools\\mingw1310_64\\bin;${env:PATH}"
+                }
+            ],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "D:/QT/Tools/mingw1310_64/bin/gdb.exe",
+            "preLaunchTask": "CMake: build xray_serial_console"
+        }
+    ]
+}

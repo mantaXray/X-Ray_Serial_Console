@@ -1,0 +1,54 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 16,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "qt-6.11-mingw-debug",
+      "displayName": "Qt 6.11 MinGW Debug",
+      "description": "Configure with the local Qt 6.11.0 MinGW kit installed under D:/QT.",
+      "generator": "MinGW Makefiles",
+      "binaryDir": "${sourceDir}/build/qt-6.11-mingw-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_PREFIX_PATH": "D:/QT/6.11.0/mingw_64",
+        "CMAKE_CXX_COMPILER": "D:/QT/Tools/mingw1310_64/bin/g++.exe",
+        "CMAKE_MAKE_PROGRAM": "D:/QT/Tools/mingw1310_64/bin/mingw32-make.exe"
+      }
+    },
+    {
+      "name": "qt-6.11-mingw-release",
+      "displayName": "Qt 6.11 MinGW Release",
+      "description": "Release build with the local Qt 6.11.0 MinGW kit installed under D:/QT.",
+      "generator": "MinGW Makefiles",
+      "binaryDir": "${sourceDir}/build/qt-6.11-mingw-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_PREFIX_PATH": "D:/QT/6.11.0/mingw_64",
+        "CMAKE_CXX_COMPILER": "D:/QT/Tools/mingw1310_64/bin/g++.exe",
+        "CMAKE_MAKE_PROGRAM": "D:/QT/Tools/mingw1310_64/bin/mingw32-make.exe"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "qt-6.11-mingw-debug",
+      "displayName": "Build Qt 6.11 MinGW Debug",
+      "configurePreset": "qt-6.11-mingw-debug",
+      "targets": [
+        "xray_serial_console"
+      ]
+    },
+    {
+      "name": "qt-6.11-mingw-release",
+      "displayName": "Build Qt 6.11 MinGW Release",
+      "configurePreset": "qt-6.11-mingw-release",
+      "targets": [
+        "xray_serial_console"
+      ]
+    }
+  ]
+}

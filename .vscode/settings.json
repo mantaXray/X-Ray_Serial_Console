@@ -1,0 +1,18 @@
+{
+    "cmake.useCMakePresets": "always",
+    "cmake.configurePreset": "qt-6.11-mingw-debug",
+    "cmake.buildPreset": "qt-6.11-mingw-debug",
+    "cmake.buildTarget": "xray_serial_console",
+    "cmake.debugConfig": {
+        "cwd": "${workspaceFolder}",
+        "MIMode": "gdb",
+        "miDebuggerPath": "D:/QT/Tools/mingw1310_64/bin/gdb.exe",
+        "environment": [
+            {
+                "name": "PATH",
+                "value": "D:\\QT\\6.11.0\\mingw_64\\bin;D:\\QT\\Tools\\mingw1310_64\\bin;${env:PATH}"
+            }
+        ],
+        "externalConsole": false
+    }
+}
