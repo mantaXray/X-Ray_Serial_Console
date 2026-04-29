@@ -3,7 +3,7 @@
  * All rights reserved.
  *
  * Filename: appsettings.cpp
- * Version: 1.0.0
+ * Version: 1.00.00
  * Description: 应用 INI 配置文件访问实现
  *
  * Author: mantaXray

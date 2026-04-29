@@ -3,7 +3,7 @@
  * All rights reserved.
  *
  * Filename: toolboxdialog.cpp
- * Version: 1.0.0
+ * Version: 1.00.00
  * Description: 协议与工具箱对话框实现
  *
  * Author: mantaXray

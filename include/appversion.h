@@ -3,11 +3,11 @@
  * All rights reserved.
  *
  * Filename: appversion.h
- * Version: 1.0.0
+ * Version: 1.00.00
  * Description: Central version definition for X-Ray Serial Console
  *
  * Author: mantaXray
- * Date: 2026年04月28日
+ * Date: 2026年04月29日
  */
 
 #ifndef APPVERSION_H
@@ -15,9 +15,9 @@
 
 namespace AppVersion {
 
-inline constexpr auto kSemanticVersion = "1.0.0";
-inline constexpr auto kReleaseDate = "2026-04-28";
-inline constexpr auto kDateVersion = "20260428";
+inline constexpr auto kSemanticVersion = "1.00.00";
+inline constexpr auto kReleaseDate = "2026-04-29";
+inline constexpr auto kDateVersion = "20260429";
 
 } // namespace AppVersion
 

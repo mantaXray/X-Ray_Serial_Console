@@ -3,7 +3,7 @@
  * All rights reserved.
  *
  * Filename: multistringdock.cpp
- * Version: 1.0.0
+ * Version: 1.00.00
  * Description: 多字符串停靠面板实现
  *
  * Author: mantaXray

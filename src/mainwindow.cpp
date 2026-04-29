@@ -3,11 +3,11 @@
  * All rights reserved.
  *
  * Filename: mainwindow.cpp
- * Version: 1.0.0
+ * Version: 1.00.00
  * Description: X-Ray Serial Console main window implementation
  *
  * Author: mantaXray
- * Date: 2026年04月28日
+ * Date: 2026年04月29日
  */
 
 #include "appversion.h"
@@ -4967,12 +4967,13 @@ void MainWindow::showInfoDialog(const QString &title, const QString &text)
  *
  * @param 无
  *
- * @return 不带版本号的标题栏文本
+ * @return 带当前版本号的标题栏文本
  */
 QString MainWindow::windowTitleText() const
 {
-    return uiText(QStringLiteral("X-Ray 串口调试台"),
-                  QStringLiteral("X-Ray Serial Console"));
+    return uiText(QStringLiteral("X-Ray 串口调试台 v%1"),
+                  QStringLiteral("X-Ray Serial Console v%1"))
+        .arg(QString::fromLatin1(AppVersion::kSemanticVersion));
 }
 
 /**

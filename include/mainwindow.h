@@ -3,7 +3,7 @@
  * All rights reserved.
  *
  * Filename: mainwindow.h
- * Version: 1.0.0
+ * Version: 1.00.00
  * Description: X-Ray Serial Console main window declaration
  *
  * Author: mantaXray

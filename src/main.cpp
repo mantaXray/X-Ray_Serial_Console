@@ -3,7 +3,7 @@
  * All rights reserved.
  *
  * Filename: main.cpp
- * Version: 1.0.0
+ * Version: 1.00.00
  * Description: X-Ray Serial Console entry point
  *
  * Author: mantaXray

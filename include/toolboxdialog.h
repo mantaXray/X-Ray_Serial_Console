@@ -3,7 +3,7 @@
  * All rights reserved.
  *
  * Filename: toolboxdialog.h
- * Version: 1.0.0
+ * Version: 1.00.00
  * Description: 协议与工具箱对话框类声明
  *
  * Author: mantaXray

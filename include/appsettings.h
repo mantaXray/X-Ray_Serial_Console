@@ -3,7 +3,7 @@
  * All rights reserved.
  *
  * Filename: appsettings.h
- * Version: 1.0.0
+ * Version: 1.00.00
  * Description: 应用 INI 配置文件访问接口
  *
  * Author: mantaXray
